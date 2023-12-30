@@ -10,7 +10,9 @@ struct Hand {
     id: i32, 
     cards: String,
     points: i32,
-    bid: i64
+    bid: i64,
+    jokers: i32,
+    joker_used: bool,
 }
 
 fn main() {
@@ -22,10 +24,23 @@ fn main() {
 
     let mut hands: Vec<Hand> = input_data
         .iter()
-        .map(|x| Hand { cards: x.split(" ").take(1).collect(), points: 0, bid: x.split(" ").skip(1).take(1).collect::<String>().parse::<i64>().unwrap(), id: 0 })
+        .map(|x| Hand {
+            cards: x.split(" ").take(1).collect(), 
+            points: 0,
+            bid: x.split(" ").skip(1).take(1).collect::<String>().parse::<i64>().unwrap(),
+            jokers: 0,
+            joker_used: false,
+            id: 0,
+        })
         .collect();
 
 
+    hands.iter_mut()
+        .for_each(|hand| {
+            hand.jokers = hand.cards.chars()
+                .filter(|x| *x == 'J')
+                .count() as i32;
+        });
 
     println!("{:?}", hands);
 
@@ -37,8 +52,30 @@ fn main() {
                 .for_each(|x| arr_rpt.push(x.count));
 
             arr_rpt.sort_by(|a, b| b.cmp(a));
+            
+
 
             if arr_rpt.len() > 0 {
+                if hand.jokers > 0 {
+                    match arr_rpt[0] {
+                        4 => arr_rpt[0] = 5,
+                        3 => {
+                            if hand.jokers == 2 { arr_rpt[0] = 5; }
+                            else if hand.jokers == 1 { arr_rpt[0] = 4; }
+                            else if arr_rpt.len() > 1 { 
+                                arr_rpt.pop();
+                                arr_rpt[0] = 5;
+                            }
+                        },
+                        2 => {
+                            if arr_rpt.len() == 1 {
+
+
+                            else { arr_rpt[0] = 3; }
+                        },
+                        _ => (),
+                    }
+                }
                 match arr_rpt[0] {
                     5 => hand.points = 50,
                     4 => hand.points = 40,
