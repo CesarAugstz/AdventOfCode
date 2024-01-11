@@ -1,3 +1,5 @@
+use std::{env, fs::read_to_string};
+
 #[derive(Debug)]
 struct Repeat {
     c: char,
@@ -12,24 +14,33 @@ struct Hand {
     points: i32,
     bid: i64,
     jokers: i32,
-    joker_used: bool,
 }
 
 fn main() {
-    let input_data: Vec<&str> = include_str!("d7")
+    let args: Vec<String> = env::args().collect();
+    let mut file_name: String = String::from("ex");
+    if args.len() > 1 {
+        file_name = args[1].clone();
+    }
+    println!("args: {:?}", args);
+    let input = read_to_string(file_name.to_string())
+        .unwrap_or_else(|err| {
+            println!("Error reading file: {}", err);
+            panic!();
+        });
+
+    let input_lines :Vec<&str> = input
         .trim()
         .split("\n")
         .collect();
 
-
-    let mut hands: Vec<Hand> = input_data
+    let mut hands: Vec<Hand> = input_lines
         .iter()
         .map(|x| Hand {
             cards: x.split(" ").take(1).collect(), 
             points: 0,
             bid: x.split(" ").skip(1).take(1).collect::<String>().parse::<i64>().unwrap(),
             jokers: 0,
-            joker_used: false,
             id: 0,
         })
         .collect();
@@ -54,23 +65,26 @@ fn main() {
             arr_rpt.sort_by(|a, b| b.cmp(a));
             
 
+            if arr_rpt.len() == 0 && hand.jokers > 0 {
+                hand.points = 15;
+            }
 
             if arr_rpt.len() > 0 {
                 if hand.jokers > 0 {
                     match arr_rpt[0] {
                         4 => arr_rpt[0] = 5,
                         3 => {
-                            if hand.jokers == 2 { arr_rpt[0] = 5; }
-                            else if hand.jokers == 1 { arr_rpt[0] = 4; }
-                            else if arr_rpt.len() > 1 { 
+                            if arr_rpt.len() > 1 { 
                                 arr_rpt.pop();
                                 arr_rpt[0] = 5;
                             }
+                            else { arr_rpt[0] = 4; }
                         },
                         2 => {
-                            if arr_rpt.len() == 1 {
-
-
+                            if arr_rpt.len() > 1 && hand.jokers == 2 {
+                                arr_rpt.pop();
+                                arr_rpt[0] = 4;
+                            }
                             else { arr_rpt[0] = 3; }
                         },
                         _ => (),
